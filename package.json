@@ -1,6 +1,6 @@
 {
   "name": "react-voice-action-router",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "A headless voice action router for React",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -23,7 +23,7 @@
     "LICENSE"
   ],
   "license": "MIT",
-"scripts": {
+  "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
