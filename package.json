@@ -1,0 +1,21 @@
+{
+  "name": "react-voice-action-router",
+  "version": "1.0.0",
+  "description": "A headless voice action router for React",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nouman64-cat/react-voice-action-router.git"
+  },
+  "keywords": [],
+  "author": "Nouman64-cat",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Nouman64-cat/react-voice-action-router/issues"
+  },
+  "homepage": "https://github.com/Nouman64-cat/react-voice-action-router#readme"
+}
