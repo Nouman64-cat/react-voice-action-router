@@ -2,7 +2,26 @@
   "name": "react-voice-action-router",
   "version": "1.0.0",
   "description": "A headless voice action router for React",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./adapters": {
+      "require": "./dist/adapters/index.js",
+      "import": "./dist/adapters/index.mjs",
+      "types": "./dist/adapters/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "license": "MIT",
 "scripts": {
     "build": "tsup",
