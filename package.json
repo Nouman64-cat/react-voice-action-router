@@ -17,5 +17,11 @@
   "bugs": {
     "url": "https://github.com/Nouman64-cat/react-voice-action-router/issues"
   },
-  "homepage": "https://github.com/Nouman64-cat/react-voice-action-router#readme"
+  "homepage": "https://github.com/Nouman64-cat/react-voice-action-router#readme",
+  "devDependencies": {
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
+  }
 }
