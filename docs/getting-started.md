@@ -40,8 +40,11 @@ import { createOpenAIAdapter } from "react-voice-action-router";
 
 const voiceAdapter = createOpenAIAdapter({
   apiKey: "your-openai-api-key",
+  model: "gpt-4o-mini", // Optional - defaults to gpt-4o-mini
 });
 ```
+
+The model option lets you choose which OpenAI model to use for intent matching. The default is gpt-4o-mini which provides a good balance of speed and accuracy. You can also use gpt-4o for more complex matching or gpt-3.5-turbo for faster responses.
 
 You can also use Google Gemini or Anthropic Claude. See the [Adapters](/adapters) page for details on each provider.
 
