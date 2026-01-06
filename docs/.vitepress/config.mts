@@ -9,21 +9,40 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Examples', link: '/markdown-examples' }
+      { text: 'Get Started', link: '/getting-started' },
+      { text: 'API Reference', link: '/api-reference' }
     ],
 
     sidebar: [
       {
-        text: 'Examples',
+        text: 'Introduction',
         items: [
-          { text: 'Markdown Examples', link: '/markdown-examples' },
-          { text: 'Runtime API Examples', link: '/api-examples' }
+          { text: 'Getting Started', link: '/getting-started' },
+          { text: 'How It Works', link: '/how-it-works' }
+        ]
+      },
+      {
+        text: 'Guide',
+        items: [
+          { text: 'AI Adapters', link: '/adapters' },
+          { text: 'Examples', link: '/examples' }
+        ]
+      },
+      {
+        text: 'Reference',
+        items: [
+          { text: 'API Reference', link: '/api-reference' }
         ]
       }
     ],
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/vuejs/vitepress' }
-    ]
+      { icon: 'github', link: 'https://github.com/Nouman64-cat/react-voice-action-router' }
+    ],
+
+    footer: {
+      message: 'Released under the MIT License.',
+      copyright: 'Copyright 2024-present'
+    }
   }
 })
