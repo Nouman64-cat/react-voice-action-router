@@ -118,27 +118,26 @@ When a user speaks, the system first checks if the transcript exactly matches an
 
 If there is no exact match, the transcript is sent to your AI adapter along with all registered commands. The AI analyzes the user intent and returns the best matching command ID.
 
-## Processing Voice Input
+## Processing Voice Input (v2.0)
 
-To process voice input, use the useVoiceContext hook to access the processTranscript function:
+In version 2.0, you no longer need to implement the Web Speech API manually. The `VoiceControlProvider` automatically initializes a continuous speech recognition engine.
+
+You can control the microphone using the `useVoiceContext` hook:
 
 ```tsx
 import { useVoiceContext } from "react-voice-action-router";
 
-function VoiceButton() {
-  const { processTranscript, isProcessing } = useVoiceContext();
+function VoiceControls() {
+  const { isListening, startListening, stopListening, error } = useVoiceContext();
 
-  const handleVoiceInput = (transcript) => {
-    processTranscript(transcript);
-  };
+  if (error) return <p>Error: {error}</p>;
 
   return (
-    <button disabled={isProcessing}>
-      {isProcessing ? "Processing..." : "Voice Input"}
+    <button onClick={isListening ? stopListening : startListening}>
+      {isListening ? "🛑 Stop Listening" : "🎤 Start Listening"}
     </button>
   );
 }
-```
 
 The library is headless and does not include speech recognition. You can use any speech-to-text solution like the Web Speech API, Deepgram, or AssemblyAI to capture voice input.
 
@@ -149,3 +148,4 @@ Now that you have the basics set up, explore these topics:
 - [Adapters](/adapters) - Learn about different AI providers and how to configure them
 - [API Reference](/api-reference) - Complete documentation of all exports
 - [Examples](/examples) - See real-world usage patterns
+```

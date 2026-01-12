@@ -468,4 +468,53 @@ function ProductPage({ product }) {
 }
 ```
 
-When the user navigates from HomePage to ProductPage, the home page commands automatically unregister and the product page commands register. This ensures the AI only sees relevant commands for the current context.
+## Dictation Mode (Typewriter)
+
+Version 2.0 introduces a first-class Dictation Mode. This allows you to capture raw text input (like for a search bar or chat input) without triggering commands.
+
+```tsx
+import { useVoiceContext } from "react-voice-action-router";
+import { useState } from "react";
+
+function VoiceSearchBar() {
+  const { startDictation, stopDictation, isDictating } = useVoiceContext();
+  const [query, setQuery] = useState("");
+
+  const handleMicClick = () => {
+    if (isDictating) {
+      stopDictation();
+      return;
+    }
+
+    startDictation({
+      // Show text as the user speaks
+      onInterim: (text) => setQuery(text),
+
+      // Commit text when they finish a sentence
+      onFinal: (text) => {
+        setQuery(text);
+        // Optional: Auto-submit here
+      },
+
+      // If the user says "Search", exit dictation and run the 'search' command
+      exitCommands: ["search", "cancel"],
+    });
+  };
+
+  return (
+    <div className="search-bar">
+      <input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Type or speak..."
+      />
+      <button
+        onClick={handleMicClick}
+        style={{ background: isDictating ? "red" : "blue" }}
+      >
+        {isDictating ? "🛑 Stop" : "🎤 Dictate"}
+      </button>
+    </div>
+  );
+}
+```

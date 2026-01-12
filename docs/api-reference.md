@@ -16,12 +16,13 @@ import { VoiceControlProvider } from "react-voice-action-router";
 
 #### Props
 
-| Prop          | Type       | Required | Description                                                       |
-| ------------- | ---------- | -------- | ----------------------------------------------------------------- |
-| children      | ReactNode  | Yes      | The child components that will have access to voice control       |
-| adapter       | LLMAdapter | Yes      | The AI adapter function for fuzzy matching                        |
-| wakeWord      | string     | No       | A trigger word like "Jarvis" (not implemented in current version) |
-| onStateChange | function   | No       | Callback function called when the internal state changes          |
+| Prop                  | Type       | Default | Description                                                        |
+| --------------------- | ---------- | ------- | ------------------------------------------------------------------ | --- |
+| children              | ReactNode  | -       | The child components that will have access to voice control        |
+| adapter               | LLMAdapter | -       | The AI adapter function for fuzzy matching                         |
+| disableSpeechEngine   | boolean    | false   | (v2.0) Set to true to disable the built-in microphone logic        |
+| enableOfflineFallback | boolean    | true    | (v2.0) If true, falls back to local keyword matching when AI fails |
+| onStateChange         | function   | -       | Callback function called when the internal state changes           |     |
 
 #### Example
 
@@ -103,15 +104,18 @@ const context = useVoiceContext();
 
 #### Return Value
 
-| Property          | Type               | Description                                                       |
-| ----------------- | ------------------ | ----------------------------------------------------------------- |
-| isListening       | boolean            | Whether voice input is currently being captured                   |
-| isProcessing      | boolean            | Whether a transcript is currently being processed                 |
-| lastTranscript    | string or null     | The most recently processed transcript                            |
-| activeCommands    | VoiceCommand array | List of all currently registered commands                         |
-| register          | function           | Manually register a command                                       |
-| unregister        | function           | Manually unregister a command by ID                               |
-| processTranscript | function           | Process a voice transcript to find and execute a matching command |
+| Property       | Type           | Description                                            |
+| -------------- | -------------- | ------------------------------------------------------ |
+| isListening    | boolean        | Whether the microphone is currently active             |
+| isProcessing   | boolean        | Whether a transcript is currently being processed      |
+| isDictating    | boolean        | (v2.0) Whether the engine is in Dictation Mode         |
+| lastTranscript | string or null | The most recently processed transcript                 |
+| error          | string or null | Any error from the speech engine (e.g., "not-allowed") |
+| startListening | function       | Manually start the microphone                          |
+| stopListening  | function       | Manually stop the microphone                           |
+| startDictation | function       | (v2.0) Switch to Dictation Mode (accepts options)      |
+| stopDictation  | function       | (v2.0) Exit Dictation Mode                             |
+| setPaused      | function       | Pause/Resume routing logic                             |
 
 #### Example
 
@@ -241,4 +245,22 @@ import type {
   VoiceControlState,
   LLMAdapter,
 } from "react-voice-action-router";
+```
+
+### DictationOptions (v2.0)
+
+Configuration object passed to `startDictation()`.
+
+```tsx
+interface DictationOptions {
+  /** Callback fired repeatedly while the user is speaking (interim results) */
+  onInterim?: (text: string) => void;
+  /** Callback fired when the user pauses or stops speaking (final result) */
+  onFinal: (text: string) => void;
+  /**
+   * Phrases that will immediately exit dictation and trigger a command.
+   * Example: ["send", "search", "cancel"]
+   */
+  exitCommands?: string[];
+}
 ```

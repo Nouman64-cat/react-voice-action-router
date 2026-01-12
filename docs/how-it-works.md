@@ -175,6 +175,32 @@ The library provides a **Gatekeeper Mechanism** via the `setPaused()` control.
 
 This allows you to "borrow" the microphone for other purposes without unmounting the provider.
 
+## The Speech Engine (v2.0)
+
+In version 2.0, we introduced a robust internal Speech Engine that wraps the browser's `SpeechRecognition` API.
+
+### Auto-Restart Logic
+
+Browsers (especially Chrome) automatically stop the speech recognition service after a few seconds of silence or network inactivity. This is frustrating for "always-on" voice control.
+
+Our engine monitors the `onend` event. If the `isListening` state is meant to be true, it immediately restarts the service. This creates the illusion of a continuous stream, handling the restart logic so you don't have to.
+
+### Stale Closure Prevention
+
+Since the Speech API runs outside of React's render cycle, event listeners can often capture "stale" React state. We use a **Ref-based architecture** internally to ensure that the microphone always has access to the latest application state (like `isPaused` or `isDictating`) without needing to detach and re-attach listeners.
+
+## Offline Fallback
+
+Reliance on AI APIs introduces a single point of failure. If the user loses internet connection or the API is down, voice control usually breaks.
+
+We implemented a **Local Fallback Matcher** that kicks in whenever the AI adapter throws an error.
+
+1. **Tokenization:** It splits the user's transcript into keywords.
+2. **Scoring:** It checks these keywords against the `description` and `phrase` of registered commands.
+3. **Threshold:** If a command has a high enough overlap score, it is executed locally.
+
+This ensures that critical navigation and control commands ("Go home", "Stop", "Dark mode") continue to work offline.
+
 ## Performance Considerations
 
 ### Exact Match First

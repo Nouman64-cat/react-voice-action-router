@@ -14,12 +14,14 @@ hero:
       link: https://github.com/Nouman64-cat/react-voice-action-router
 
 features:
-  - title: Headless and Zero UI
-    details: We provide the logic hooks and you build the interface. Keep your voice controls invisible or design a custom experience. No forced UI components.
+  - title: Built-in Speech Engine (v2.0)
+    details: No more boilerplate. We handle the browser's SpeechRecognition API, including auto-restarts, error handling, and cross-browser support.
+  - title: Dictation Mode (v2.0)
+    details: Seamlessly switch between "Command Mode" and "Typewriter Mode". Capture raw text input with a single function call.
+  - title: Offline Fallback (v2.0)
+    details: Your app keeps working even if the internet goes down. We automatically fall back to local keyword matching if the AI is unreachable.
   - title: Context-Aware Commands
-    details: The AI only knows about commands registered on the current screen. This reduces API costs and prevents hallucinations from unrelated commands.
+    details: The AI only knows about commands registered on the current screen. This reduces API costs and prevents hallucinations.
   - title: Universal AI Adapter
-    details: Built-in support for OpenAI, Google Gemini, and Anthropic Claude. Easily create custom adapters for any AI provider or local models.
-  - title: Latency-First Design
-    details: Supports instant execution for exact phrase matches with zero latency. Falls back to AI only when fuzzy matching is needed.
+    details: Built-in support for OpenAI, Google Gemini, and Anthropic Claude. Easily create custom adapters for any AI provider.
 ---
