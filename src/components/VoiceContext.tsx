@@ -151,7 +151,10 @@ export const VoiceControlProvider: React.FC<VoiceProviderProps> = ({
         if (isFinal) {
           options.onFinal(transcript);
         } else {
-          options.onInterim?.(transcript);
+          // Default to true if undefined
+          if (options.interimResults !== false) {
+            options.onInterim?.(transcript);
+          }
         }
         return;
       }

@@ -11,6 +11,11 @@ export interface DictationOptions {
      * Example: ["send", "stop listening", "search"]
      */
     exitCommands?: string[];
+    /** 
+     * If true, onInterim will be called with real-time partial results.
+     * Default: true
+     */
+    interimResults?: boolean;
 }
 /**
  * A voice command that can be registered by a component.

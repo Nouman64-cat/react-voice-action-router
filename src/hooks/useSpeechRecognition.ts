@@ -55,13 +55,17 @@ export const useSpeechRecognition = ({
         // --- EVENT HANDLERS ---
 
         recognition.onresult = (event: SpeechRecognitionEvent) => {
-            // Get the latest result
-            const result = event.results[event.results.length - 1];
-            const transcript = result[0].transcript;
-            const isFinal = result.isFinal;
+            // "interimResults: true" means we get repeated events as the confidence grows.
+            // We only care about the *latest* result that changed.
+            // In continuous mode, previous results at lower indices are already settled (final).
 
-            // Pass to parent
-            onResult(transcript, isFinal);
+            // Iterate from the first changed result index to the end
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const result = event.results[i];
+                const transcript = result[0].transcript;
+                const isFinal = result.isFinal;
+                onResult(transcript, isFinal);
+            }
         };
 
         recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
