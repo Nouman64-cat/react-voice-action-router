@@ -286,6 +286,62 @@ function VoiceDebugPanel() {
 }
 ```
 
+## Transfer Control (Dictation Mode)
+
+This example demonstrates how to use setPaused to temporarily stop the router. This is useful when you have a specific input field (like a search bar or chat input) that needs to consume raw text without triggering voice commands.
+
+```tsx
+import { useVoiceContext } from "react-voice-action-router";
+import { useState } from "react";
+
+function DictationInput() {
+  const { setPaused } = useVoiceContext();
+  const [inputText, setInputText] = useState("");
+  const [isDictating, setIsDictating] = useState(false);
+
+  const startDictation = () => {
+    // 1. Pause the global router so "Clear" or "Submit" commands don't fire
+    setPaused(true);
+    setIsDictating(true);
+
+    // (Simulated Dictation Logic)
+    // In a real app, you would start your SpeechRecognition here
+    console.log("Dictation started...");
+  };
+
+  const stopDictation = () => {
+    // 2. Resume the global router
+    setPaused(false);
+    setIsDictating(false);
+    console.log("Dictation stopped.");
+  };
+
+  return (
+    <div style={{ padding: 20, border: "1px solid #ccc" }}>
+      <h3>Search with Dictation</h3>
+      <input
+        value={inputText}
+        onChange={(e) => setInputText(e.target.value)}
+        placeholder="Hold mic to dictate..."
+      />
+      <button
+        onMouseDown={startDictation}
+        onMouseUp={stopDictation}
+        style={{
+          backgroundColor: isDictating ? "red" : "gray",
+          color: "white",
+        }}
+      >
+        🎤 {isDictating ? "Listening (Raw)..." : "Hold to Dictate"}
+      </button>
+      <p style={{ fontSize: "0.8rem", color: "#666" }}>
+        While holding the button, voice commands are disabled.
+      </p>
+    </div>
+  );
+}
+```
+
 ## Using with Web Speech API
 
 A complete example integrating the Web Speech API for speech recognition.

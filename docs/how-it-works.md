@@ -163,6 +163,18 @@ This prompt:
 - Enforces JSON-only output
 - Lists available commands with descriptions
 
+## Transfer Control & Pausing
+
+In complex voice applications, there are times when you need to capture raw speech without triggering commands (e.g., dictating an email or searching for a song title).
+
+The library provides a **Gatekeeper Mechanism** via the `setPaused()` control.
+
+1. **Paused State**: When `isPaused` is set to `true`, the `processTranscript` function acts as a dead end. It logs the input but **does not** proceed to matching (neither Exact nor Fuzzy).
+
+2. **Resumed State**: When set back to `false`, normal routing resumes immediately.
+
+This allows you to "borrow" the microphone for other purposes without unmounting the provider.
+
 ## Performance Considerations
 
 ### Exact Match First

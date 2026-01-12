@@ -119,12 +119,12 @@ const context = useVoiceContext();
 import { useVoiceContext } from "react-voice-action-router";
 
 function VoiceStatus() {
-  const { isProcessing, lastTranscript, activeCommands } = useVoiceContext();
+  const { isProcessing, isPaused, activeCommands } = useVoiceContext();
 
   return (
     <div>
       <p>Status: {isProcessing ? "Processing..." : "Ready"}</p>
-      <p>Last input: {lastTranscript}</p>
+      <p>Router State: {isPaused ? "Paused" : "Active"}</p>
       <p>Registered commands: {activeCommands.length}</p>
     </div>
   );
@@ -156,6 +156,8 @@ interface VoiceControlState {
   isProcessing: boolean;
   lastTranscript: string | null;
   activeCommands: VoiceCommand[];
+  /** Whether the global router is currently paused/ignoring input. */
+  isPaused: boolean;
 }
 ```
 
