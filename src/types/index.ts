@@ -21,6 +21,7 @@ export interface VoiceControlState {
     lastTranscript: string | null;
     /** Exposed primarily for debugging/visualization */
     activeCommands: VoiceCommand[];
+    isPaused: boolean;
 }
 
 /**
