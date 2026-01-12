@@ -129,16 +129,13 @@ export const VoiceControlProvider: React.FC<VoiceProviderProps> = ({
     [adapter, enableOfflineFallback]
   );
 
-  // ... (keep useSpeechRecognition hook and register/unregister)
-  const {
-    isListening: engineListening,
-    start: engineStart,
-    stop: engineStop,
-  } = useSpeechRecognition({
-    disabled: disableSpeechEngine,
-    onResult: (transcript, isFinal) => {
+  // 3. INTERNAL SPEECH ENGINE
+  const handleResult = useCallback(
+    (transcript: string, isFinal: boolean) => {
       if (isDictatingRef.current && dictationOptionsRef.current) {
         const options = dictationOptionsRef.current;
+
+        // Check for exit commands
         if (
           isFinal &&
           options.exitCommands?.some((cmd) =>
@@ -149,16 +146,39 @@ export const VoiceControlProvider: React.FC<VoiceProviderProps> = ({
           processTranscript(transcript);
           return;
         }
-        isFinal ? options.onFinal(transcript) : options.onInterim?.(transcript);
+
+        // Handle dictation input
+        if (isFinal) {
+          options.onFinal(transcript);
+        } else {
+          options.onInterim?.(transcript);
+        }
         return;
       }
-      if (isFinal) processTranscript(transcript);
+
+      // Normal Command Mode
+      if (isFinal) {
+        processTranscript(transcript);
+      }
     },
-    onError: (err) =>
-      setState((prev) => ({
-        ...prev,
-        error: typeof err === "string" ? err : "Speech Error",
-      })),
+    [processTranscript, stopDictation]
+  );
+
+  const handleError = useCallback((err: string) => {
+    setState((prev) => ({
+      ...prev,
+      error: typeof err === "string" ? err : "Speech Error",
+    }));
+  }, []);
+
+  const {
+    isListening: engineListening,
+    start: engineStart,
+    stop: engineStop,
+  } = useSpeechRecognition({
+    disabled: disableSpeechEngine,
+    onResult: handleResult,
+    onError: handleError,
   });
 
   useEffect(() => {
