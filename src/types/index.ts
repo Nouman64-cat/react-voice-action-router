@@ -1,3 +1,17 @@
+
+/**
+ * Configuration for the Dictation Mode.
+ */
+export interface DictationOptions {
+    /** Callback for partial results while the user is speaking (real-time feedback) */
+    onInterim?: (text: string) => void;
+    /** Callback for the final committed text segment */
+    onFinal: (text: string) => void;
+    /** * Phrases that will stop dictation and immediately trigger a voice command.
+     * Example: ["send", "stop listening", "search"]
+     */
+    exitCommands?: string[];
+}
 /**
  * A voice command that can be registered by a component.
  */
@@ -22,6 +36,8 @@ export interface VoiceControlState {
     /** Exposed primarily for debugging/visualization */
     activeCommands: VoiceCommand[];
     isPaused: boolean;
+    error: string | null;
+    isDictating: boolean;
 }
 
 /**
@@ -42,4 +58,6 @@ export interface VoiceProviderProps {
     wakeWord?: string;
     /** Optional: Callback for debugging state changes */
     onStateChange?: (state: VoiceControlState) => void;
+    disableSpeechEngine?: boolean;
+    enableOfflineFallback?: boolean;
 }

@@ -4,14 +4,25 @@ import React, {
   useState,
   useCallback,
   useRef,
+  useEffect,
 } from "react";
-import { VoiceCommand, VoiceControlState, VoiceProviderProps } from "../types";
-
+import {
+  VoiceCommand,
+  VoiceControlState,
+  VoiceProviderProps,
+  DictationOptions,
+} from "../types";
+import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
+import { findBestMatch } from "../core/localMatcher";
 interface VoiceContextValue extends VoiceControlState {
   register: (cmd: VoiceCommand) => void;
   unregister: (id: string) => void;
   processTranscript: (text: string) => Promise<void>;
   setPaused: (paused: boolean) => void;
+  startListening: () => void;
+  stopListening: () => void;
+  startDictation: (options: DictationOptions) => void;
+  stopDictation: () => void;
 }
 
 const VoiceContext = createContext<VoiceContextValue | null>(null);
@@ -19,23 +30,143 @@ const VoiceContext = createContext<VoiceContextValue | null>(null);
 export const VoiceControlProvider: React.FC<VoiceProviderProps> = ({
   children,
   adapter,
+  disableSpeechEngine = false,
+  enableOfflineFallback = true, // <--- Default to true
 }) => {
-  // THE REGISTRY: A Map ensures O(1) lookups and prevents duplicate IDs
   const commandsRef = useRef<Map<string, VoiceCommand>>(new Map());
+  const isPausedRef = useRef(false);
+  const isDictatingRef = useRef(false);
+  const dictationOptionsRef = useRef<DictationOptions | null>(null);
 
-  // UI STATE
   const [state, setState] = useState<VoiceControlState>({
     isListening: false,
     isProcessing: false,
     lastTranscript: null,
     activeCommands: [],
     isPaused: false,
+    error: null,
+    isDictating: false,
   });
 
-  // 1. REGISTRATION LOGIC
+  const setPaused = useCallback((paused: boolean) => {
+    isPausedRef.current = paused;
+    setState((prev) => ({ ...prev, isPaused: paused }));
+  }, []);
+
+  const startDictation = useCallback((options: DictationOptions) => {
+    isDictatingRef.current = true;
+    dictationOptionsRef.current = options;
+    setState((prev) => ({ ...prev, isDictating: true }));
+  }, []);
+
+  const stopDictation = useCallback(() => {
+    isDictatingRef.current = false;
+    dictationOptionsRef.current = null;
+    setState((prev) => ({ ...prev, isDictating: false }));
+  }, []);
+
+  const processTranscript = useCallback(
+    async (transcript: string) => {
+      if (isPausedRef.current) return;
+
+      const cleanText = transcript.trim().toLowerCase();
+      if (!cleanText) return;
+
+      setState((prev) => ({
+        ...prev,
+        isProcessing: true,
+        lastTranscript: cleanText,
+      }));
+      const allCommands = Array.from(commandsRef.current.values());
+
+      // 1. Exact Match (Fastest)
+      const exactMatch = allCommands.find(
+        (c) => c.phrase?.toLowerCase() === cleanText
+      );
+      if (exactMatch) {
+        console.log(`⚡ Match: "${cleanText}"`);
+        exactMatch.action();
+        setState((prev) => ({ ...prev, isProcessing: false }));
+        return;
+      }
+
+      // 2. AI Fuzzy Match (Smartest)
+      try {
+        const commandListForAI = allCommands.map(
+          ({ id, description, phrase }) => ({ id, description, phrase })
+        );
+
+        const result = await adapter(cleanText, commandListForAI);
+
+        if (result.commandId) {
+          const cmd = commandsRef.current.get(result.commandId);
+          if (cmd) {
+            cmd.action();
+          }
+        }
+      } catch (error) {
+        console.error("AI Adapter Failed:", error);
+
+        // 3. Offline Fallback (Safety Net)
+        if (enableOfflineFallback) {
+          console.warn("🌐 Attempting Offline Fallback...");
+          const fallbackId = findBestMatch(cleanText, allCommands);
+
+          if (fallbackId) {
+            const cmd = commandsRef.current.get(fallbackId);
+            if (cmd) {
+              console.log(`✅ Offline Match: ${cmd.id}`);
+              cmd.action();
+            }
+          } else {
+            console.log("❌ No offline match found.");
+          }
+        }
+      } finally {
+        setState((prev) => ({ ...prev, isProcessing: false }));
+      }
+    },
+    [adapter, enableOfflineFallback]
+  );
+
+  // ... (keep useSpeechRecognition hook and register/unregister)
+  const {
+    isListening: engineListening,
+    start: engineStart,
+    stop: engineStop,
+  } = useSpeechRecognition({
+    disabled: disableSpeechEngine,
+    onResult: (transcript, isFinal) => {
+      if (isDictatingRef.current && dictationOptionsRef.current) {
+        const options = dictationOptionsRef.current;
+        if (
+          isFinal &&
+          options.exitCommands?.some((cmd) =>
+            transcript.toLowerCase().includes(cmd)
+          )
+        ) {
+          stopDictation();
+          processTranscript(transcript);
+          return;
+        }
+        isFinal ? options.onFinal(transcript) : options.onInterim?.(transcript);
+        return;
+      }
+      if (isFinal) processTranscript(transcript);
+    },
+    onError: (err) =>
+      setState((prev) => ({
+        ...prev,
+        error: typeof err === "string" ? err : "Speech Error",
+      })),
+  });
+
+  useEffect(() => {
+    setState((prev) => ({ ...prev, isListening: engineListening }));
+  }, [engineListening]);
+
   const register = useCallback((cmd: VoiceCommand) => {
     commandsRef.current.set(cmd.id, cmd);
-    // Update generic state for debugging UI
     setState((prev) => ({
       ...prev,
       activeCommands: Array.from(commandsRef.current.values()),
@@ -49,76 +180,20 @@ export const VoiceControlProvider: React.FC<VoiceProviderProps> = ({
       activeCommands: Array.from(commandsRef.current.values()),
     }));
   }, []);
-  const setPaused = useCallback((paused: boolean) => {
-    setState((prev) => ({ ...prev, isPaused: paused }));
-  }, []);
-
-  // 2. THE ROUTER LOGIC
-  const processTranscript = useCallback(
-    async (transcript: string) => {
-      // --- TRANSFER CONTROL CHECK ---
-      // If the router is paused, we ignore everything and return immediately.
-      if (state.isPaused) {
-        console.log("⏸️ Router is paused. Ignoring:", transcript);
-        return;
-      }
-
-      const cleanText = transcript.trim().toLowerCase();
-      setState((prev) => ({
-        ...prev,
-        isProcessing: true,
-        lastTranscript: cleanText,
-      }));
-
-      const allCommands = Array.from(commandsRef.current.values());
-
-      // PHASE 1: EXACT MATCH (0ms Latency)
-      const exactMatch = allCommands.find(
-        (c) => c.phrase?.toLowerCase() === cleanText
-      );
-
-      if (exactMatch) {
-        console.log(`⚡ Instant Match: "${cleanText}" -> ${exactMatch.id}`);
-        exactMatch.action();
-        setState((prev) => ({ ...prev, isProcessing: false }));
-        return;
-      }
-
-      // PHASE 2: FUZZY MATCH (AI Adapter)
-      try {
-        console.log(`🤖 AI Routing: "${cleanText}"...`);
-
-        const commandListForAI = allCommands.map(
-          ({ id, description, phrase }) => ({
-            id,
-            description,
-            phrase,
-          })
-        );
-
-        const result = await adapter(cleanText, commandListForAI);
-
-        if (result.commandId) {
-          const cmd = commandsRef.current.get(result.commandId);
-          if (cmd) {
-            console.log(`✅ Matched: ${cmd.id}`);
-            cmd.action();
-          } else {
-            console.warn(`⚠️ Adapter returned unknown ID: ${result.commandId}`);
-          }
-        }
-      } catch (error) {
-        console.error("Adapter Error:", error);
-      } finally {
-        setState((prev) => ({ ...prev, isProcessing: false }));
-      }
-    },
-    [adapter, state.isPaused]
-  );
 
   return (
     <VoiceContext.Provider
-      value={{ ...state, register, unregister, processTranscript, setPaused }}
+      value={{
+        ...state,
+        register,
+        unregister,
+        processTranscript,
+        setPaused,
+        startListening: engineStart,
+        stopListening: engineStop,
+        startDictation,
+        stopDictation,
+      }}
     >
       {children}
     </VoiceContext.Provider>
